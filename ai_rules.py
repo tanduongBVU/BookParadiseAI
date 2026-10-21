@@ -129,13 +129,3 @@ def kiem_tra_so_luong_mua(so_luong):
     return False
 
 
-# =========================================================
-# AI RULE 5 - KIEM TRA DON GIA MUA
-# =========================================================
-
-def kiem_tra_gia_mua(don_gia):
-
-    if don_gia < 0:
-        return True
-
-    return False

@@ -1,22 +1,38 @@
 import psycopg2
 
-
 def ket_noi_database():
     conn = psycopg2.connect(
         host="localhost",
         database="BookParadise_DB",
         user="postgres",
-        password="123456",
+        password="1",
         port="5432"
     )
-
     return conn
 
+# =========================================================
+# GHI LOG SỰ KIỆN BẢO MẬT (HÀM THÊM MỚI)
+# =========================================================
+def ghi_log_su_kien_bao_mat(event_type, description, risk_score, severity, analysis_result):
+    conn = ket_noi_database()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        INSERT INTO quan_ly_ban_sach.security_events
+        (event_type, source_ip, description, risk_score, severity, detection_status, review_status, is_simulated, analysis_result, created_at)
+        VALUES (%s, %s, %s, %s, %s, 'Detected', 'New', false, %s, NOW())
+        """,
+        (event_type, 'Backend AI', description, risk_score, severity, analysis_result)
+    )
+
+    conn.commit()
+    cursor.close()
+    conn.close()
 
 # =========================================================
 # BINH LUAN
 # =========================================================
-
 def lay_binh_luan(ma_binh_luan):
     conn = ket_noi_database()
     cursor = conn.cursor()
@@ -64,7 +80,6 @@ def cap_nhat_binh_luan(ma_binh_luan, trang_thai, hien_thi):
 # =========================================================
 # NGUOI DUNG
 # =========================================================
-
 def lay_nguoi_dung(ma_nguoi_dung):
     conn = ket_noi_database()
     cursor = conn.cursor()
@@ -109,7 +124,6 @@ def cap_nhat_nguoi_dung(ma_nguoi_dung, trang_thai, hien_thi):
 # =========================================================
 # SACH
 # =========================================================
-
 def lay_sach(ma_sach):
     conn = ket_noi_database()
     cursor = conn.cursor()
@@ -154,7 +168,6 @@ def cap_nhat_sach(ma_sach, trang_thai, hien_thi):
 # =========================================================
 # DON HANG
 # =========================================================
-
 def lay_don_hang(ma_don_hang):
     conn = ket_noi_database()
     cursor = conn.cursor()
@@ -199,7 +212,6 @@ def cap_nhat_don_hang(ma_don_hang, trang_thai, hien_thi):
 # =========================================================
 # CHI TIET DON HANG
 # =========================================================
-
 def lay_chi_tiet_don_hang(ma_chi_tiet):
     conn = ket_noi_database()
     cursor = conn.cursor()

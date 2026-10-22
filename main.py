@@ -1,4 +1,3 @@
-
 import psycopg2
 import select
 
@@ -13,7 +12,8 @@ from database import (
     lay_don_hang,
     cap_nhat_don_hang,
     lay_chi_tiet_don_hang,
-    cap_nhat_chi_tiet_don_hang
+    cap_nhat_chi_tiet_don_hang,
+    ghi_log_su_kien_bao_mat # Đã thêm hàm ghi log
 )
 
 from ai_rules import (
@@ -23,30 +23,21 @@ from ai_rules import (
     kiem_tra_so_luong_mua
 )
 
-
 # =========================================================
 # KET NOI POSTGRESQL
 # =========================================================
-
 conn = ket_noi_database()
-
-conn.set_isolation_level(
-    psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT
-)
-
+conn.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
 cursor = conn.cursor()
-
 
 # =========================================================
 # LISTEN 5 KENH
 # =========================================================
-
 cursor.execute("LISTEN kenh_binh_luan;")
 cursor.execute("LISTEN kenh_nguoi_dung;")
 cursor.execute("LISTEN kenh_sach;")
 cursor.execute("LISTEN kenh_don_hang;")
 cursor.execute("LISTEN kenh_chi_tiet_don_hang;")
-
 
 print("========================================")
 print("BOOKPARADISE AI WORKER")
@@ -60,27 +51,21 @@ print("- kenh_don_hang")
 print("- kenh_chi_tiet_don_hang")
 print("========================================")
 
-
 # =========================================================
 # VONG LAP CHINH
 # =========================================================
-
 while True:
-
     if select.select([conn], [], [], 5) == ([], [], []):
         continue
 
     conn.poll()
 
     while conn.notifies:
-
         thong_bao = conn.notifies.pop(0)
-
         kenh = thong_bao.channel
         payload = thong_bao.payload
 
-        print()
-        print("========================================")
+        print("\n========================================")
         print("CO DU LIEU MOI")
         print("Kenh:", kenh)
         print("Ma du lieu:", payload)
@@ -89,11 +74,8 @@ while True:
         # =================================================
         # BINH LUAN
         # =================================================
-
         if kenh == "kenh_binh_luan":
-
             ma_binh_luan = int(payload)
-
             noi_dung = lay_binh_luan(ma_binh_luan)
 
             if noi_dung is None:
@@ -101,44 +83,33 @@ while True:
                 continue
 
             print("Noi dung:", noi_dung)
-
             vi_pham = kiem_tra_binh_luan(noi_dung)
 
             if vi_pham:
-
                 print("⚠ CANH BAO AI")
                 print("Phat hien binh luan vi pham!")
-
-                cap_nhat_binh_luan(
-                    ma_binh_luan,
-                    "Vi_Pham_Tieu_Chuan",
-                    False
+                cap_nhat_binh_luan(ma_binh_luan, "Vi_Pham_Tieu_Chuan", False)
+                
+                # Ghi lên UI
+                ghi_log_su_kien_bao_mat(
+                    "suspicious_input", 
+                    f"Binh luan ID {ma_binh_luan}: {noi_dung}", 
+                    90, "High", "Phát hiện bình luận vi phạm tiêu chuẩn (chứa từ ngữ xúc phạm/spam)."
                 )
-
+                
                 print("Trang thai: Vi_Pham_Tieu_Chuan")
                 print("Hien thi: FALSE")
-
             else:
-
                 print("✓ Binh luan hop le.")
-
-                cap_nhat_binh_luan(
-                    ma_binh_luan,
-                    "Cho_Kiem_Duyet",
-                    True
-                )
-
+                cap_nhat_binh_luan(ma_binh_luan, "Cho_Kiem_Duyet", True)
                 print("Trang thai: Cho_Kiem_Duyet")
                 print("Hien thi: TRUE")
 
         # =================================================
         # NGUOI DUNG
         # =================================================
-
         elif kenh == "kenh_nguoi_dung":
-
             ma_nguoi_dung = int(payload)
-
             nguoi_dung = lay_nguoi_dung(ma_nguoi_dung)
 
             if nguoi_dung is None:
@@ -150,44 +121,33 @@ while True:
 
             print("Ho ten:", ho_ten)
             print("Email:", email)
-
             spam = kiem_tra_spam_account(email)
 
             if spam:
-
                 print("⚠ CANH BAO AI")
                 print("Phat hien tai khoan spam!")
-
-                cap_nhat_nguoi_dung(
-                    ma_nguoi_dung,
-                    "Spam_Account",
-                    False
+                cap_nhat_nguoi_dung(ma_nguoi_dung, "Spam_Account", False)
+                
+                # Ghi lên UI
+                ghi_log_su_kien_bao_mat(
+                    "suspicious_input", 
+                    f"Nguoi dung ID {ma_nguoi_dung} | Email: {email}", 
+                    85, "High", "Phát hiện tài khoản đăng ký bằng email rác ảo (spam account)."
                 )
 
                 print("Trang thai: Spam_Account")
                 print("Hien thi: FALSE")
-
             else:
-
                 print("✓ Tai khoan binh thuong.")
-
-                cap_nhat_nguoi_dung(
-                    ma_nguoi_dung,
-                    "Cho_Kiem_Duyet",
-                    True
-                )
-
+                cap_nhat_nguoi_dung(ma_nguoi_dung, "Cho_Kiem_Duyet", True)
                 print("Trang thai: Cho_Kiem_Duyet")
                 print("Hien thi: TRUE")
 
         # =================================================
         # SACH
         # =================================================
-
         elif kenh == "kenh_sach":
-
             ma_sach = int(payload)
-
             sach = lay_sach(ma_sach)
 
             if sach is None:
@@ -201,77 +161,62 @@ while True:
             print("Ten sach:", ten_sach)
             print("Gia:", gia)
 
-            ket_qua = kiem_tra_sach(
-                ten_sach,
-                mo_ta,
-                gia
-            )
+            ket_qua = kiem_tra_sach(ten_sach, mo_ta, gia)
 
-            
             if ket_qua == "Loi_Gia_Ban_Du_Lieu_Rac":
-
                 print("⚠ CANH BAO AI")
                 print("Phat hien nhieu loi trong sach!")
-                print("- Gia sach bi am")
-                print("- Ten sach chua qua nhieu ky tu rac")
-
-                cap_nhat_sach(
-                    ma_sach,
-                    "Loi_Gia_Ban_Du_Lieu_Rac",
-                    False
+                cap_nhat_sach(ma_sach, "Loi_Gia_Ban_Du_Lieu_Rac", False)
+                
+                # Ghi lên UI
+                ghi_log_su_kien_bao_mat(
+                    "suspicious_input", f"Sach ID {ma_sach}: {ten_sach} | Gia: {gia}", 
+                    95, "High", "Lỗi nghiêm trọng: Giá âm và tên sách chứa ký tự rác."
                 )
 
                 print("Trang thai: Loi_Gia_Ban_Du_Lieu_Rac")
                 print("Hien thi: FALSE")
 
             elif ket_qua == "Loi_Gia_Ban":
-
                 print("⚠ CANH BAO AI")
                 print("Phat hien gia sach bat thuong!")
-                print("- Gia sach bi am")
-
-                cap_nhat_sach(
-                    ma_sach,
-                    "Loi_Gia_Ban",
-                    False
+                cap_nhat_sach(ma_sach, "Loi_Gia_Ban", False)
+                
+                # Ghi lên UI
+                ghi_log_su_kien_bao_mat(
+                    "suspicious_input", f"Sach ID {ma_sach}: {ten_sach} | Gia: {gia}", 
+                    80, "High", "Giá sách bị âm (dữ liệu không hợp lệ)."
                 )
 
                 print("Trang thai: Loi_Gia_Ban")
                 print("Hien thi: FALSE")
 
             elif ket_qua == "Du_Lieu_Rac":
-
                 print("⚠ CANH BAO AI")
                 print("Phat hien du lieu sach rac!")
-                print("- Ten sach chua qua nhieu ky tu rac")
-
-                cap_nhat_sach(
-                    ma_sach,
-                    "Du_Lieu_Rac",
-                    False
+                cap_nhat_sach(ma_sach, "Du_Lieu_Rac", False)
+                
+                # Ghi lên UI
+                ghi_log_su_kien_bao_mat(
+                    "suspicious_input", f"Sach ID {ma_sach}: {ten_sach}", 
+                    75, "Medium", "Tên sách chứa quá nhiều ký tự rác."
                 )
 
                 print("Trang thai: Du_Lieu_Rac")
                 print("Hien thi: FALSE")
 
             else:
-
                 print("✓ Sach hop le.")
-
                 cap_nhat_sach(ma_sach, "Hop_Le", True)
                 print("Sach hop le - AI da kiem tra xong.")
                 print("Trang thai AI: Hop_Le")
                 print("Hien thi: TRUE")
 
-
         # =================================================
         # DON HANG
         # =================================================
-
         elif kenh == "kenh_don_hang":
-
             ma_don_hang = int(payload)
-
             don_hang = lay_don_hang(ma_don_hang)
 
             if don_hang is None:
@@ -283,23 +228,14 @@ while True:
 
             print("Ma nguoi dung:", ma_nguoi_dung)
             print("Tong tien:", tong_tien)
-
             print("✓ Don hang da duoc ghi nhan.")
-
-            # Phan kiem tra so luong nam o
-            # kenh_chi_tiet_don_hang.
 
         # =================================================
         # CHI TIET DON HANG
         # =================================================
-
         elif kenh == "kenh_chi_tiet_don_hang":
-
             ma_chi_tiet = int(payload)
-
-            chi_tiet = lay_chi_tiet_don_hang(
-                ma_chi_tiet
-            )
+            chi_tiet = lay_chi_tiet_don_hang(ma_chi_tiet)
 
             if chi_tiet is None:
                 print("Khong tim thay chi tiet don hang.")
@@ -315,59 +251,29 @@ while True:
             print("So luong:", so_luong)
             print("Don gia:", don_gia)
 
-            # Chi kiem tra so luong mua
-            bat_thuong_so_luong = kiem_tra_so_luong_mua(
-                so_luong
-            )
-
-            # -------------------------------------------------
-            # SO LUONG BAT THUONG
-            # -------------------------------------------------
+            bat_thuong_so_luong = kiem_tra_so_luong_mua(so_luong)
 
             if bat_thuong_so_luong:
-
                 print("⚠ CANH BAO AI")
                 print("Phat hien so luong mua bat thuong!")
-                print("So luong:", so_luong)
-                print("Nguong:", 50)
-
-                cap_nhat_chi_tiet_don_hang(
-                    ma_chi_tiet,
-                    "Canh_Bao_Dau_Co",
-                    False
+                
+                cap_nhat_chi_tiet_don_hang(ma_chi_tiet, "Canh_Bao_Dau_Co", False)
+                cap_nhat_don_hang(ma_don_hang, "Canh_Bao_Dau_Co", False)
+                
+                # Ghi lên UI
+                ghi_log_su_kien_bao_mat(
+                    "suspicious_input", f"Chi tiet DH ID {ma_chi_tiet} | So luong: {so_luong}", 
+                    85, "High", "Cảnh báo đầu cơ: Mua số lượng sách quá lớn (vượt ngưỡng 50 cuốn)."
                 )
 
-                cap_nhat_don_hang(
-                    ma_don_hang,
-                    "Canh_Bao_Dau_Co",
-                    False
-                )
-
-                print(
-                    "Trang thai ChiTietDonHang: Canh_Bao_Dau_Co"
-                )
-                print(
-                    "Trang thai DonHang: Canh_Bao_Dau_Co"
-                )
+                print("Trang thai ChiTietDonHang: Canh_Bao_Dau_Co")
+                print("Trang thai DonHang: Canh_Bao_Dau_Co")
                 print("Hien thi: FALSE")
-
-            # -------------------------------------------------
-            # HOP LE
-            # -------------------------------------------------
-
             else:
-
                 print("✓ Chi tiet don hang hop le.")
-
-                cap_nhat_chi_tiet_don_hang(
-                    ma_chi_tiet,
-                    "Cho_Kiem_Duyet",
-                    True
-                )
-
+                cap_nhat_chi_tiet_don_hang(ma_chi_tiet, "Cho_Kiem_Duyet", True)
                 print("Trang thai: Cho_Kiem_Duyet")
                 print("Hien thi: TRUE")
 
         else:
-
             print("Kenh khong duoc xu ly:", kenh)

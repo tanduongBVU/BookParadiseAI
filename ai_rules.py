@@ -1,3 +1,4 @@
+
 # =========================================================
 # AI RULE 1 - KIEM TRA BINH LUAN
 # =========================================================
@@ -66,7 +67,8 @@ def kiem_tra_sach(ten_sach, mo_ta, gia):
         loi_gia = True
 
     # -----------------------------------------------------
-    # Kiem tra ten sach co qua nhieu ky tu rac
+    # Kiem tra ten sach co ky tu rac
+    # Chi can xuat hien 1 ky tu rac la bao loi
     # -----------------------------------------------------
 
     ky_tu_rac = [
@@ -79,22 +81,14 @@ def kiem_tra_sach(ten_sach, mo_ta, gia):
         "*"
     ]
 
-    so_ky_tu_rac = 0
-
     for ky_tu in ten_sach:
 
         if ky_tu in ky_tu_rac:
-            so_ky_tu_rac = so_ky_tu_rac + 1
-
-    if len(ten_sach) > 0:
-
-        ty_le_ky_tu_rac = so_ky_tu_rac / len(ten_sach)
-
-        if ty_le_ky_tu_rac >= 0.5:
             du_lieu_rac = True
+            break
 
     # -----------------------------------------------------
-    # Neu sach co ca 2 loi
+    # Ca gia am va du lieu rac
     # -----------------------------------------------------
 
     if loi_gia and du_lieu_rac:
@@ -114,6 +108,10 @@ def kiem_tra_sach(ten_sach, mo_ta, gia):
     if du_lieu_rac:
         return "Du_Lieu_Rac"
 
+    # -----------------------------------------------------
+    # Khong co loi
+    # -----------------------------------------------------
+
     return None
 
 
@@ -127,5 +125,3 @@ def kiem_tra_so_luong_mua(so_luong):
         return True
 
     return False
-
-

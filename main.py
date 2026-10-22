@@ -207,6 +207,7 @@ while True:
                 gia
             )
 
+            
             if ket_qua == "Loi_Gia_Ban_Du_Lieu_Rac":
 
                 print("⚠ CANH BAO AI")
@@ -227,6 +228,7 @@ while True:
 
                 print("⚠ CANH BAO AI")
                 print("Phat hien gia sach bat thuong!")
+                print("- Gia sach bi am")
 
                 cap_nhat_sach(
                     ma_sach,
@@ -241,6 +243,7 @@ while True:
 
                 print("⚠ CANH BAO AI")
                 print("Phat hien du lieu sach rac!")
+                print("- Ten sach chua qua nhieu ky tu rac")
 
                 cap_nhat_sach(
                     ma_sach,
@@ -255,14 +258,11 @@ while True:
 
                 print("✓ Sach hop le.")
 
-                cap_nhat_sach(
-                    ma_sach,
-                    "Cho_Kiem_Duyet",
-                    True
-                )
-
-                print("Trang thai: Cho_Kiem_Duyet")
+                cap_nhat_sach(ma_sach, "Hop_Le", True)
+                print("Sach hop le - AI da kiem tra xong.")
+                print("Trang thai AI: Hop_Le")
                 print("Hien thi: TRUE")
+
 
         # =================================================
         # DON HANG

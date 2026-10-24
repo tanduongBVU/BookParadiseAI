@@ -7,7 +7,7 @@ import time
 import psycopg2
 from database import ket_noi_database
 
-
+# python ai_optimizer.py
 POLL_SECONDS = 1
 BATCH_SIZE = 100
 
@@ -32,16 +32,23 @@ def phan_tich_tim_kiem(description):
 
     thoi_gian_ms = int(ket_qua.group(1))
 
+    # CÂU LỆNH KÊ ĐƠN TỪ AI
+    ai_recommendation = (
+        "NGUYÊN NHÂN: Full Table Scan (Quét toàn bộ bảng) do thiếu Index trên cột 'ten_sach'.\n"
+        "ĐỀ XUẤT TỐI ƯU (ACTION REQUIRED): Chạy lệnh CREATE INDEX ... USING GIN (ten_sach gin_trgm_ops) "
+        "để tăng tốc độ tìm kiếm."
+    )
+
     if thoi_gian_ms >= VERY_SLOW_THRESHOLD_MS:
         return thoi_gian_ms, "High", (
-            f"Tim kiem rat cham: {thoi_gian_ms} ms. "
-            "Can kiem tra truy van SQL, index va tai database."
+            f"Báo động đỏ: Thời gian tìm kiếm quá lâu ({thoi_gian_ms} ms). "
+            f"{ai_recommendation}"
         )
 
     if thoi_gian_ms > SLOW_THRESHOLD_MS:
         return thoi_gian_ms, "Medium", (
-            f"Tim kiem cham: {thoi_gian_ms} ms. "
-            "Nen kiem tra truy van SQL va du lieu tra ve."
+            f"Tìm kiếm chậm: {thoi_gian_ms} ms. "
+            f"{ai_recommendation}"
         )
 
     return thoi_gian_ms, "Info", (
